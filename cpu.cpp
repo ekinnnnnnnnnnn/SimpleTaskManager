@@ -102,6 +102,19 @@ class cpuMonitor {
                     statFile >> data.processes;
             }
         }
+
+        double calculateUsage(const cpuStats &s1,const cpuStats &s2) {
+            long long totalDiff = s2.total() - s1.total();
+            long long idleDiff = s2.idleTime() - s1.idleTime();
+            return 100.0 * (totalDiff - idleDiff) / totalDiff;
+        }
+        void fetch(cpuData &data, cpuStats &stats) {
+            cpuStats currStats = getRawStats();
+            data.utilization = calculateUsage(prevStats, currStats);
+            prevStats = currStats;
+            stats = currStats;
+            getFeatures(data);
+        }
     };
 
 
@@ -115,15 +128,16 @@ int main() {
     monitor.getFeatures(data);
 
     while (true) {
+        monitor.fetch(data, stats);
         this_thread::sleep_for(chrono::seconds(5));
-        /*cout<<"User: "<<stats.user<<endl
+        cout<<"User: "<<stats.user<<endl
             <<"Nice: "<<stats.nice<<endl
             <<"System: "<<stats.system<<endl
             <<"Idle: "<<stats.idle<<endl
             <<"IOWait: "<<stats.iowait<<endl
             <<"IRQ: "<<stats.irq<<endl
             <<"SoftIRQ: "<<stats.softirq<<endl
-            <<"Steal: "<<stats.steal<<endl;*/
+            <<"Steal: "<<stats.steal<<endl;
         cout<<"Model: "<<data.model<<endl
             <<"Current Speed: "<<data.currentSpeed<<" MHz"<<endl
             <<"L3 Cache: "<<data.l3Cache<<endl
@@ -131,6 +145,9 @@ int main() {
             <<"Logical Cores: "<<data.logical<<endl
             <<"Uptime: "<<data.uptime<<" seconds"<<endl
             <<"Processes: "<<data.processes<<endl;
+        cout << "Usage (%): " << data.utilization << endl
+             << "Current Speed (MHz): " << data.currentSpeed << endl
+             << "Total Processes: " << data.processes << endl;
     }
 
     return 0;
