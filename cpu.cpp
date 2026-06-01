@@ -129,7 +129,6 @@ int main() {
 
     while (true) {
         monitor.fetch(data, stats);
-        this_thread::sleep_for(chrono::seconds(5));
         cout<<"User: "<<stats.user<<endl
             <<"Nice: "<<stats.nice<<endl
             <<"System: "<<stats.system<<endl
@@ -148,6 +147,7 @@ int main() {
         cout << "Usage (%): " << data.utilization << endl
              << "Current Speed (MHz): " << data.currentSpeed << endl
              << "Total Processes: " << data.processes << endl;
+        this_thread::sleep_for(chrono::seconds(5));
     }
 
     return 0;
