@@ -42,4 +42,49 @@ struct cpuData {
     string family;
 };
 
+class cpuMonitor {
+    private:
+        cpuStats prevStats;
+    public:
+        cpuStats getRawStats(){
+            ifstream file("/proc/stat");
+            string label;
+            cpuStats stats;
+
+            if (file>>label&&label=="cpu"){
+                file>>stats.user>>
+                    stats.nice>>
+                    stats.system>>
+                    stats.idle>>
+                    stats.iowait>>
+                    stats.irq>>
+                    stats.softirq>>
+                    stats.steal;
+            }
+            return stats;
+        }
+};
+
+
+int main() {
+    cpuMonitor monitor;
+    cpuStats stats;
+    cpuData data;
+
+    stats=monitor.getRawStats();
+
+    while (true) {
+        this_thread::sleep_for(chrono::seconds(5));
+        cout<<"User: "<<stats.user<<endl
+            <<"Nice: "<<stats.nice<<endl
+            <<"System: "<<stats.system<<endl
+            <<"Idle: "<<stats.idle<<endl
+            <<"IOWait: "<<stats.iowait<<endl
+            <<"IRQ: "<<stats.irq<<endl
+            <<"SoftIRQ: "<<stats.softirq<<endl
+            <<"Steal: "<<stats.steal<<endl;
+    }
+
+    return 0;
+}
 
