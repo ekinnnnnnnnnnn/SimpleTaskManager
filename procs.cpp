@@ -18,13 +18,13 @@
 #define RAM_NO_MAIN
 #define DISK_NO_MAIN
 #define GPU_NO_MAIN
-#define NETWORK_NO_MAIN
+#define NET_NO_MAIN
 
 #include "cpu.cpp"
 #include "ram.cpp"
 #include "disk.cpp"
 #include "gpu.cpp"
-#include "network.cpp"
+#include "net.cpp"
 
 using namespace std;
 
@@ -40,7 +40,7 @@ struct ProcessInfo {
   unsigned long long totalTicks;
 };
 
-class processMonitor{
+class ProcessMonitor{
     private:
     long pageSize;
     double clkTck;
@@ -52,7 +52,7 @@ class processMonitor{
         static map<uid_t, string> cache;
         if(cache.count(uid)) return cache[uid];
         struct passwd *pwd = getpwuid(uid);
-        string name = pw ? pw->pw_name : to_string(uid);
+        string name = pwd ? pwd->pw_name : to_string(uid);
         cache[uid] = name;
         return name;
     }
@@ -80,7 +80,7 @@ class processMonitor{
     vector<ProcessInfo> fetch() {
         auto now = chrono::steady_clock::now();
         double elapsedSec = chrono::duration<double>(now - lastTime).count();
-        if (elapsedSec <= 0.0) elapesedSec = 1;
+        if (elapsedSec <= 0.0) elapsedSec = 1.0;
         vector<ProcessInfo> processes;
         set<int> activePids;
         DIR *dir = opendir("/proc");
@@ -98,7 +98,7 @@ class processMonitor{
             getline(statFile, content);
             size_t lastParen = content.rfind(')');
             if (lastParen == string::npos) continue;
-            size_t firstParen = content.find(')');
+            size_t firstParen = content.find('(');
             string comm = content.substr(firstParen + 1, lastParen - firstParen - 1);
             stringstream ss(content.substr(lastParen + 2));
             string state;
@@ -122,7 +122,7 @@ class processMonitor{
             proc.memPercent = 100.0 * (rss * pageSize) / totalRam;
             proc.command = getCmdline(pid, comm);
             proc.totalTicks = utime + stime;
-            if (prevTicksMap.count(pid)) {
+            if (prevTicksMap.count(pid) && proc.totalTicks >= prevTicksMap[pid]) {
                 unsigned long long deltaTicks = proc.totalTicks - prevTicksMap[pid];
                 proc.cpuPercent = 100.0 * ((double)deltaTicks / clkTck) / elapsedSec;
             } 
@@ -130,7 +130,7 @@ class processMonitor{
                 proc.cpuPercent = 0.0;
             }
             prevTicksMap[pid] = proc.totalTicks;
-            processList.push_back(proc);
+            processes.push_back(proc);
         }
         closedir(dir);
         for (auto it = prevTicksMap.begin(); it != prevTicksMap.end(); ) {
@@ -139,7 +139,51 @@ class processMonitor{
             else
                 ++it;
         }
-        lastTime = currentTime;
-    return processList;
-  }
+        lastTime = now;
+        return processes;
+    }
+    vector<ProcessInfo> fetchProcesses() {
+        return fetch();
+    }
 };
+string formatMemory(double mb) {
+    char buf[32];
+    if (mb >= 1024.0 * 1024.0) {
+        snprintf(buf, sizeof(buf), "%.1fT", mb / (1024.0 * 1024.0));
+    } else if (mb >= 1024.0) {
+        snprintf(buf, sizeof(buf), "%.1fG", mb / 1024.0);
+    } else {
+        snprintf(buf, sizeof(buf), "%.1fM", mb);
+    }
+    return string(buf);
+}
+#ifndef PROCESSES_NO_MAIN
+int main() {
+    ProcessMonitor monitor;
+    monitor.fetch();
+    this_thread::sleep_for(chrono::milliseconds(500));
+    vector<ProcessInfo> procs = monitor.fetch();
+    sort(procs.begin(), procs.end(),
+       [](const ProcessInfo &a, const ProcessInfo &b) {
+            return a.cpuPercent > b.cpuPercent;
+        });
+
+    printf("%-7s %-10s %5s %6s %6s %8s %8s  %-s\n", "PID", "USER", "NI", "CPU%",
+            "MEM%", "VIRT", "RES", "COMMAND");
+
+    int count = 0;
+    for (const auto &p : procs) {
+        if (count >= 20) break;
+        string cmd = p.command;
+        if (cmd.length() > 50) cmd = cmd.substr(0, 47) + "...";
+        string virtStr = formatMemory(p.virtMb);
+        string resStr = formatMemory(p.resMb);
+
+        printf("%-7d %-10s %5d %5.1f%% %5.1f%% %8s %8s  %-s\n", p.pid,
+            p.user.c_str(), p.nice, p.cpuPercent, p.memPercent, virtStr.c_str(),
+            resStr.c_str(), cmd.c_str());
+        count++;
+    }
+    return 0;
+}
+#endif

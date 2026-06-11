@@ -51,7 +51,7 @@ class ramMonitor {
             data.utilization=100.0*data.used/data.total;
         }
 };
-
+#ifndef RAM_NO_MAIN
 int main(){
     ramMonitor monitor;
     ramData data;
@@ -71,3 +71,4 @@ int main(){
         this_thread::sleep_for(chrono::seconds(5));
     }
 }
+#endif
