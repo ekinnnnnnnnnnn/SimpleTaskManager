@@ -139,7 +139,6 @@ int main() {
             <<"SoftIRQ: "<<stats.softirq<<endl
             <<"Steal: "<<stats.steal<<endl;
         cout<<"Model: "<<data.model<<endl
-            <<"Current Speed: "<<data.currentSpeed<<" MHz"<<endl
             <<"L3 Cache: "<<data.l3Cache<<endl
             <<"Sockets: "<<data.sockets<<endl
             <<"Logical Cores: "<<data.logical<<endl
