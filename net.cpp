@@ -1,3 +1,4 @@
+#pragma once
 #include <fstream>
 #include <iostream>
 #include <algorithm>
@@ -113,7 +114,7 @@ class netMonitor{
         lastFetchTime=currentTime;
     }
 };
-
+#ifndef NET_NO_MAIN
 int main(){
     netMonitor monitor;
     vector<netData> interfaces;

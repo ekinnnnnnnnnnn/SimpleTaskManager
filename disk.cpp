@@ -1,3 +1,4 @@
+#pragma once
 #include <fstream>
 #include <iostream>
 #include <algorithm>
@@ -76,7 +77,7 @@ class diskMonitor{
         prevStats=curr;
     }       
 };
-
+#ifndef DISK_NO_MAIN
 int main(){
     string diskName="sda";
     if(!ifstream("/sys/block/sda").is_open())
@@ -97,3 +98,4 @@ int main(){
         this_thread::sleep_for(chrono::seconds(5));
     }
 }
+#endif

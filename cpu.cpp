@@ -1,3 +1,4 @@
+#pragma once
 #include <fstream>
 #include <iostream>
 #include <algorithm>
@@ -118,7 +119,7 @@ class cpuMonitor {
     };
 
 
-
+#ifndef CPU_NO_MAIN
 int main() {
     cpuMonitor monitor;
     cpuStats stats;
@@ -152,4 +153,4 @@ int main() {
 
     return 0;
 }
-
+#endif

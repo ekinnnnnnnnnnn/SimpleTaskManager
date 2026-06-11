@@ -1,3 +1,4 @@
+#pragma once
 #include <fstream>
 #include <iostream>
 #include <algorithm>
@@ -99,6 +100,7 @@ class gpuMonitor{
         if(temp<0) data.tempC=readSysfs("/sys/class/drm/card0/device/hwmon/hwmon1/temp1_input")/1000.0;
     }
 };
+#ifndef GPU_NO_MAIN
 int main(){
     gpuMonitor monitor;
     gpuData data;
@@ -121,3 +123,4 @@ int main(){
 
     return 0;
 }
+#endif
