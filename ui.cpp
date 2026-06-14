@@ -1,3 +1,4 @@
+#pragma once
 #include <QApplication>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -21,6 +22,13 @@
 #include <thread>
 #include <vector>
 
+#define PROCESSES_NO_MAIN
+#define CPU_NO_MAIN
+#define RAM_NO_MAIN
+#define DISK_NO_MAIN
+#define GPU_NO_MAIN
+#define NET_NO_MAIN
+
 #include "cpu.cpp"
 #include "disk.cpp"
 #include "gpu.cpp"
@@ -28,13 +36,6 @@
 #include "ops.cpp"
 #include "procs.cpp"
 #include "ram.cpp"
-
-#define PROCESSES_NO_MAIN
-#define CPU_NO_MAIN
-#define RAM_NO_MAIN
-#define DISK_NO_MAIN
-#define GPU_NO_MAIN
-#define NET_NO_MAIN
 
 class ui : public QWidget {
 public:
@@ -86,6 +87,14 @@ public:
     gpuVBox->addWidget(gpuDetailsLabel);
     perflayout->addWidget(gpuGroup);
 
+    auto *netGroup = new QGroupBox("Network", perftab);
+    auto *netVBox = new QVBoxLayout(netGroup);
+    netLabel = new QLabel("Network Speed:", netGroup);
+    netDetailsLabel = new QLabel("Loading...", netGroup);
+    netVBox->addWidget(netLabel);
+    netVBox->addWidget(netDetailsLabel);
+    perflayout->addWidget(netGroup);
+
     tabs->addTab(perftab, "Performance");
 
     auto *procTab = new QWidget(this);
@@ -125,7 +134,7 @@ public:
     cpuDummy = cpuMon.getRawStats();
     procMon.fetch();
     auto *timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &ui::updateStats);
+    connect(timer, &QTimer::timeout, this, &ui::updatestats);
     timer->start(1000);
     updatestats();
   }
@@ -374,7 +383,7 @@ private slots:
     bool ok;
     int newNice = QInputDialog::getInt(
         this, "Set Process Priority (Nice)",
-        QString("Enter new Nice value for PID %1 (-20 to 19)",
+        QString("Enter new Nice value for PID %1 (-20 to 19)\n"
                 "Lower values is higher priority.")
             .arg(pid),
         currentNice, -20, 19, 1, &ok);
