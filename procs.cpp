@@ -168,20 +168,17 @@ int main() {
             return a.cpuPercent > b.cpuPercent;
         });
 
-    printf("%-7s %-10s %5s %6s %6s %8s %8s  %-s\n", "PID", "USER", "NI", "CPU%",
-            "MEM%", "VIRT", "RES", "COMMAND");
+    printf("%-7s %-10s %5s %6s %7s  %-s\n", "PID", "USER", "NI", "CPU%",
+            "RAM(MB)", "COMMAND");
 
     int count = 0;
     for (const auto &p : procs) {
         if (count >= 20) break;
         string cmd = p.command;
-        if (cmd.length() > 50) cmd = cmd.substr(0, 47) + "...";
-        string virtStr = formatMemory(p.virtMb);
-        string resStr = formatMemory(p.resMb);
+        if (cmd.length() > 65) cmd = cmd.substr(0, 62) + "...";
 
-        printf("%-7d %-10s %5d %5.1f%% %5.1f%% %8s %8s  %-s\n", p.pid,
-            p.user.c_str(), p.nice, p.cpuPercent, p.memPercent, virtStr.c_str(),
-            resStr.c_str(), cmd.c_str());
+        printf("%-7d %-10s %5d %5.1f%% %7.1f  %-s\n", p.pid,
+            p.user.c_str(), p.nice, p.cpuPercent, p.resMb, cmd.c_str());
         count++;
     }
     return 0;
